@@ -175,6 +175,13 @@ class MainScene extends Scene {
 
     function start() {
 
+        #if web
+        if (!Fullscreen.isFullscreen()) {
+            // Make the entire page fullscreen
+            Fullscreen.openFullscreen(js.Browser.document.documentElement);
+        }
+        #end
+
         // Called when scene has finished preloading
 
         /*
@@ -649,7 +656,7 @@ class MainScene extends Scene {
 
                         var tooClose = false;
                         for (otherButton in choiceButtons) {
-                            if (Math.abs(choiceButton.x - otherButton.x) < minXGap && Math.abs(choiceButton.x - otherButton.x) < minYGap) {
+                            if (Math.abs(choiceButton.x - otherButton.x) < minXGap || Math.abs(choiceButton.x - otherButton.x) < minYGap) {
                                 tooClose = true;
                                 break;
                             }

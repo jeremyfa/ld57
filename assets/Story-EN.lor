@@ -154,15 +154,7 @@ beat AfterTooMuchSleep
   player: I'm dizzy, and I didn't even drink alcohol yesterday, what's going on?!
 
   choice
-    Wait for it to pass, it's probably temporary
-      anxiety -= 1
-      -> WaitItPass
-
-    Have some coffee?
-      -> ShouldITakeACoffee
-
-    See a doctor
-      -> VisitDoctor
+    + FirstStageChoices
 
 
 beat ShouldITakeACoffee
@@ -203,7 +195,8 @@ beat ShouldITakeACoffee
       avoidedCoffee += 1
       -> WaitItPass
 
-    I read online that caffeine is not recommended in my situation, I should rest instead if !shouldRestInstead
+    I read online that caffeine is not recommended
+    in my situation, I should rest instead if !shouldRestInstead
       shouldRestInstead = true
       avoidedCoffee += 1
       longSleeps += 1
@@ -225,15 +218,7 @@ beat AfterTooMuchSleepAgain
   player: Who put me on sedatives? Ha ha, ha ha...
 
   choice
-    Wait for it to pass, it's probably temporary
-      anxiety -= 1
-      -> WaitItPass
-
-    Have some coffee?
-      -> ShouldITakeACoffee
-
-    See a doctor
-      -> VisitDoctor
+    + FirstStageChoices
 
 
 beat VisitDoctor

@@ -105,7 +105,7 @@ beat FirstStageChoices
       anxiety -= 1
       -> WaitItPass
 
-    Prendre un café ? if !maybeTookCoffee
+    Prendre du café ? if !maybeTookCoffee
       maybeTookCoffee = true
       -> ShouldITakeACoffee
 
@@ -155,15 +155,7 @@ beat AfterTooMuchSleep
   player: J'ai le tournis, sans avoir bu une goutte d'alcool, c'est quoi ce délire ?!
 
   choice
-    Attendre que ça passe, c'est sûrement passager
-      anxiety -= 1
-      -> WaitItPass
-
-    Prendre un café ?
-      -> ShouldITakeACoffee
-
-    Aller voir un médecin
-      -> VisitDoctor
+    + FirstStageChoices
 
 
 beat ShouldITakeACoffee
@@ -216,7 +208,7 @@ beat ShouldITakeACoffee
 beat AfterTooMuchSleepAgain
   days += 1
 
-  Vous dormez jusqu'au lendemain, c'est à dire, très longtemps !
+  Vous dormez jusqu'au lendemain. En effet, ça fait une longue nuit !
 
   mood("dizzy")
   anxiety += 1
@@ -226,15 +218,7 @@ beat AfterTooMuchSleepAgain
   player: Qui m'a mis sous sédatifs ? Ha ha, ha ha...
 
   choice
-    Attendre que ça passe, c'est sûrement passager
-      anxiety -= 1
-      -> WaitItPass
-
-    Prendre un café ?
-      -> ShouldITakeACoffee
-
-    Aller voir un médecin
-      -> VisitDoctor
+    + FirstStageChoices
 
 
 beat VisitDoctor
