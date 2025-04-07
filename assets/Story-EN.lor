@@ -1,0 +1,371 @@
+character player
+  name: Player
+  level: 0
+
+character doctor
+  name: Doctor
+
+state
+  days: 0
+  anxiety: 0
+  longSleeps: 0
+
+function min(a, b)
+  return a > b ? b : a
+
+function max(a, b)
+  return a < b ? b : a
+
+function mood(mood)
+
+function meters(meters)
+
+function down(value)
+  player.level = max(-1000, player.level - value)
+  meters(player.level)
+
+function up(value)
+  player.level = min(0, player.level + value)
+  meters(player.level)
+
+beat FirstSymptoms
+
+  mood("default")
+  player: I feel strange today, quite tired.
+
+  down(100)
+
+  player: My head feels heavy...
+
+  player: I hope it will pass, and I have things to do.
+
+  player: Actually, I'm even having trouble thinking... I must be tired.
+
+  player: Maybe I should rest?
+
+  choice
+    Go to bed early and sleep longer to recover
+      longSleeps += 1
+      You sleep a long night.
+
+      down(200)
+      When you wake up, you feel even more lethargic.
+      -> NextDay
+
+    Sleep my usual 8 hours
+      You sleep a normal night.
+
+      When you wake up, you feel about the same as yesterday.
+      -> NextDay
+
+
+beat NextDay
+  days += 1
+
+  player: I thought I would feel better this morning...
+
+  player: ...but nothing has changed.
+
+  player: I can't concentrate.\nIt's like I'm in a fog...
+
+  down(100)
+
+  mood("pain")
+  player: And this computer screen... It's making me dizzy and giving me a headache!
+
+  down(200)
+
+  mood("dizzy")
+  player: This is really strange, I've never felt like this before. Is it related to that virus everyone is talking about?
+
+  mood("default")
+  player: I had a cold two weeks ago, actually...
+
+  player: What should I do?
+
+  choice
+    + FirstStageChoices
+
+    Go back to sleep
+      anxiety -= 1
+      longSleeps += 1
+      -> AfterTooMuchSleep
+
+beat FirstStageChoices
+  state
+    maybeTookCoffee: false
+    waitedItPass: false
+    visitedDoctor: false
+    searchedInternet: false
+
+  choice
+    Wait for it to pass, it's probably temporary if !waitedItPass
+      waitedItPass = true
+      anxiety -= 1
+      -> WaitItPass
+
+    Have some coffee? if !maybeTookCoffee
+      maybeTookCoffee = true
+      -> ShouldITakeACoffee
+
+    See a doctor if days >= 2 and !visitedDoctor
+      visitedDoctor = true
+      -> VisitDoctor
+
+    Search my symptoms online if !searchedInternet
+      searchedInternet = true
+      -> SearchInternet
+
+    I don't know what to do anymore if maybeTookCoffee and waitedItPass and visitedDoctor and searchedInternet
+      -> IDontKnowWhatToDo
+
+beat SearchInternet
+  down(250)
+
+  mood("pain")
+  player: Ouch, every screen scroll is extremely unpleasant!
+
+  player: How can someone be so sensitive to screens?
+
+  mood("dizzy")
+  player: And these descriptions online worry me...
+
+  player: Some people seem to have similar problems that last for months, even years!
+
+  player: I might have something serious...
+
+  mood("default")
+
+  anxiety += 2
+
+  choice
+    + FirstStageChoices
+
+beat AfterTooMuchSleep
+  days += 1
+
+  You sleep for part of the day, and even until the next day...
+
+  mood("dizzy")
+  anxiety += 1
+  player: Ouch. Can I even walk straight?
+
+  anxiety += 1
+  player: I'm dizzy, and I didn't even drink alcohol yesterday, what's going on?!
+
+  choice
+    Wait for it to pass, it's probably temporary
+      anxiety -= 1
+      -> WaitItPass
+
+    Have some coffee?
+      -> ShouldITakeACoffee
+
+    See a doctor
+      -> VisitDoctor
+
+
+beat ShouldITakeACoffee
+  state
+    avoidedCoffee: 0
+    coffeeIsStressing: false
+    badForBrainSymptoms: false
+    badForSleep: false
+    shouldRestInstead: false
+    numAsk: 0
+
+  if numAsk == 0
+    player: I'm hesitating about having coffee. Is it a good idea?
+  else if numAsk == 1
+    player: Having coffee, a bad idea?
+  else if numAsk == 2
+    player: Should I have coffee?
+  else if numAsk == 3
+    player: Should I drink coffee?
+
+  numAsk += 1
+  if numAsk == 4
+    numAsk = 0
+
+  choice
+    Coffee is stressful, it will increase my anxiety if !coffeeIsStressing
+      coffeeIsStressing = true
+      avoidedCoffee += 1
+      -> WaitItPass
+
+    I have brain-related symptoms, it will mess with my mind if !badForBrainSymptoms
+      badForBrainSymptoms = true
+      avoidedCoffee += 1
+      -> WaitItPass
+
+    It will prevent me from sleeping properly and recovering if !badForSleep
+      badForBrainSymptoms = true
+      avoidedCoffee += 1
+      -> WaitItPass
+
+    I read online that caffeine is not recommended in my situation, I should rest instead if !shouldRestInstead
+      shouldRestInstead = true
+      avoidedCoffee += 1
+      longSleeps += 1
+      -> AfterTooMuchSleepAgain
+
+    At this point, let's go for it! if avoidedCoffee >= 2
+      -> TakeCoffee
+
+beat AfterTooMuchSleepAgain
+  days += 1
+
+  You sleep until the next day, that is, for a very long time!
+
+  mood("dizzy")
+  anxiety += 1
+  player: It's spinning... spinning...
+
+  anxiety += 1
+  player: Who put me on sedatives? Ha ha, ha ha...
+
+  choice
+    Wait for it to pass, it's probably temporary
+      anxiety -= 1
+      -> WaitItPass
+
+    Have some coffee?
+      -> ShouldITakeACoffee
+
+    See a doctor
+      -> VisitDoctor
+
+
+beat VisitDoctor
+
+  You visit the doctor, and you tell him that a few weeks ago, you had a cold.
+
+  Then, you explain that for the past few days, you've been experiencing new symptoms that you've never had before.
+
+  doctor: I understand that your cold has passed, so what's happening now? I'm listening.
+
+  -> DescribeYourSymptoms
+
+beat DescribeYourSymptoms
+
+  state
+    vertigo: false
+    concentration: false
+    screens: false
+    tired: false
+    brain: false
+    symptoms: 0
+    doctorPhrases: [
+      "Mmmm... understood. Any other symptoms?"
+      "Okay."
+      "I see..."
+    ]
+
+  choice
+    I have vertigo if !vertigo
+      vertigo = true
+
+    I can't concentrate, follow a conversation if !concentration
+      concentration = true
+
+    Screens hurt me, especially when there's movement if !screens
+      screens = true
+
+    I'm mentally tired, as if my brain has no fuel left if !tired
+      tired = true
+
+    I feel like my brain is caught in a vise if !brain
+      brain = true
+
+  doctor: $doctorPhrases[symptoms]
+  symptoms += 1
+
+  if symptoms < 3
+    -> DescribeYourSymptoms
+  else
+    -> DoctorFeedback
+
+beat DoctorFeedback
+
+  doctor: It's quite possible that your symptoms come from this pandemic virus.
+
+  doctor: Unfortunately, we're discovering the effects it can have as we go along with our patients.
+
+  doctor: Your blood pressure is good, we'll prescribe a blood test to check that everything is normal.
+
+  doctor: In any case, I'll prescribe vitamins and sick leave. Rest.
+
+  -> AfterDoctor
+
+beat AfterDoctor
+
+  You're not sure what to think about this doctor's visit.
+
+  He doesn't seem to know much more than you do.
+
+  choice
+    + FirstStageChoices
+
+beat TakeCoffee
+
+  TODO take coffee
+
+
+beat WaitItPass
+
+  state
+    numWaits: 0
+
+  if numWaits > 0
+    -> WaitItPassAgain
+  else
+    numWaits += 1
+
+    You try as best you can to get through the following days...
+
+    days += 3
+    anxiety += 1
+
+    player: Three days have passed. No improvement.
+
+    player: Actually, it's even worse.
+
+    down(150)
+
+    choice
+      + FirstStageChoices
+
+beat WaitItPassAgain
+
+  days += 4
+  anxiety += 1
+
+  Days go by...
+
+  player: One week. ONE WEEK!
+
+  mood("dizzy")
+  player: I'm not getting better.
+
+  player: Well... after all, a week is still a very short period, isn't it?
+
+  mood("pain")
+  player: But these symptoms are quite debilitating. Thinking, reflecting, it hurts...
+
+  mood("default")
+
+  choice
+    + FirstStageChoices
+
+beat IDontKnowWhatToDo
+
+  mood("pain")
+  player: I'm lost. What's happening to me?
+
+  down(1000)
+
+  mood("dizzy")
+  Not being able to think properly is being affected at the deepest level of oneself.
+
+  mood("default")
+  To be continued...

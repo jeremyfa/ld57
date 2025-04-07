@@ -1,0 +1,6 @@
+.DS_Store
+.haxelib
+/out
+/completion.hxml
+project/web/Archive.zip
+project/web/ld57.min.js

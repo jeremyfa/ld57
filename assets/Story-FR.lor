@@ -1,0 +1,372 @@
+
+character player
+  name: Player
+  level: 0
+
+character doctor
+  name: Docteur
+
+state
+  days: 0
+  anxiety: 0
+  longSleeps: 0
+
+function min(a, b)
+  return a > b ? b : a
+
+function max(a, b)
+  return a < b ? b : a
+
+function mood(mood)
+
+function meters(meters)
+
+function down(value)
+  player.level = max(-1000, player.level - value)
+  meters(player.level)
+
+function up(value)
+  player.level = min(0, player.level + value)
+  meters(player.level)
+
+beat FirstSymptoms
+
+  mood("default")
+  player: Je me sens bizarre aujourd'hui, assez fatigué.
+
+  down(100)
+
+  player: Ma tête est lourde...
+
+  player: J'espère que ça va passer, et puis j'ai des choses à faire.
+
+  player: En fait, j'ai même du mal à réfléchir... Je dois être fatigué.
+
+  player: Peut-être devrais-je me reposer ?
+
+  choice
+    Me coucher tôt et dormir plus longtemps, pour récupérer
+      longSleeps += 1
+      Vous dormez une longue nuit.
+
+      down(200)
+      Au réveil, vous vous sentez encore plus en léthargie.
+      -> NextDay
+
+    Dormir mes 8 heures habituelles
+      Vous dormez une nuit normale.
+
+      Au réveil, vous vous sentez à peu près pareil qu'hier.
+      -> NextDay
+
+
+beat NextDay
+  days += 1
+
+  player: Je pensais que ça irait mieux ce matin...
+
+  player: ...mais rien n'a changé.
+
+  player: Je n'arrive pas à me concentrer.\nComme si j'étais dans le brouillard...
+
+  down(100)
+
+  mood("pain")
+  player: Et cet écran d'ordinateur... Il me donne le vertige, et mal au crâne !
+
+  down(200)
+
+  mood("dizzy")
+  player: C'est vraiment étrange, je n'ai jamais ressenti ça avant. Est-ce que c'est lié à ce virus dont tout le monde parle ?
+
+  mood("default")
+  player: J'étais enrhumé il y a deux semaines d'ailleurs...
+
+  player: Que faut-il que je fasse ?
+
+  choice
+    + FirstStageChoices
+
+    Retourner dormir
+      anxiety -= 1
+      longSleeps += 1
+      -> AfterTooMuchSleep
+
+beat FirstStageChoices
+  state
+    maybeTookCoffee: false
+    waitedItPass: false
+    visitedDoctor: false
+    searchedInternet: false
+
+  choice
+    Attendre que ça passe, c'est sûrement passager if !waitedItPass
+      waitedItPass = true
+      anxiety -= 1
+      -> WaitItPass
+
+    Prendre un café ? if !maybeTookCoffee
+      maybeTookCoffee = true
+      -> ShouldITakeACoffee
+
+    Aller voir un médecin if days >= 2 and !visitedDoctor
+      visitedDoctor = true
+      -> VisitDoctor
+
+    Rechercher mes symptômes sur internet if !searchedInternet
+      searchedInternet = true
+      -> SearchInternet
+
+    Je ne sais plus quoi faire if maybeTookCoffee and waitedItPass and visitedDoctor and searchedInternet
+      -> IDontKnowWhatToDo
+
+beat SearchInternet
+  down(250)
+
+  mood("pain")
+  player: Ouch, chaque défilement d'écran est extrêmement désagréable !
+
+  player: Comment peut-on être aussi sensible aux écrans ?
+
+  mood("dizzy")
+  player: Et ces descriptions sur internet m'inquiètent...
+
+  player: Certaines personnes semblent avoir des problèmes similaires qui durent des mois, voire des années !
+
+  player: J'ai peut-être quelque chose de grave...
+
+  mood("default")
+
+  anxiety += 2
+
+  choice
+    + FirstStageChoices
+
+beat AfterTooMuchSleep
+  days += 1
+
+  Vous dormez une partie de la journée, et même jusqu'au lendemain...
+
+  mood("dizzy")
+  anxiety += 1
+  player: Ouch. Est-ce que j'arrive à marcher droit ?
+
+  anxiety += 1
+  player: J'ai le tournis, sans avoir bu une goutte d'alcool, c'est quoi ce délire ?!
+
+  choice
+    Attendre que ça passe, c'est sûrement passager
+      anxiety -= 1
+      -> WaitItPass
+
+    Prendre un café ?
+      -> ShouldITakeACoffee
+
+    Aller voir un médecin
+      -> VisitDoctor
+
+
+beat ShouldITakeACoffee
+  state
+    avoidedCoffee: 0
+    coffeeIsStressing: false
+    badForBrainSymptoms: false
+    badForSleep: false
+    shouldRestInstead: false
+    numAsk: 0
+
+  if numAsk == 0
+    player: J'hésite à prendre du café. Est-ce bien judicieux ?
+  else if numAsk == 1
+    player: Prendre du café, une mauvaise idée ?
+  else if numAsk == 2
+    player: Faut-il prendre du café ?
+  else if numAsk == 3
+    player: Est-ce que je devrais prendre du café ?
+
+  numAsk += 1
+  if numAsk == 4
+    numAsk = 0
+
+  choice
+    Le café, c'est stressant, ça va augmenter mon anxiété if !coffeeIsStressing
+      coffeeIsStressing = true
+      avoidedCoffee += 1
+      -> WaitItPass
+
+    J'ai des symptômes liés au cerveau, ça va foutre le bordel mentalement if !badForBrainSymptoms
+      badForBrainSymptoms = true
+      avoidedCoffee += 1
+      -> WaitItPass
+
+    Ça va m'empêcher de dormir correctement et de récupérer if !badForSleep
+      badForBrainSymptoms = true
+      avoidedCoffee += 1
+      -> WaitItPass
+
+    J'ai regardé sur internet, la cafféine est déconseillée dans ma situation, je ferais mieux de me reposer if !shouldRestInstead
+      shouldRestInstead = true
+      avoidedCoffee += 1
+      longSleeps += 1
+      -> AfterTooMuchSleepAgain
+
+    Au point ou j'en suis, allons-y ! if avoidedCoffee >= 2
+      -> TakeCoffee
+
+beat AfterTooMuchSleepAgain
+  days += 1
+
+  Vous dormez jusqu'au lendemain, c'est à dire, très longtemps !
+
+  mood("dizzy")
+  anxiety += 1
+  player: Ça tourne... ça tourne...
+
+  anxiety += 1
+  player: Qui m'a mis sous sédatifs ? Ha ha, ha ha...
+
+  choice
+    Attendre que ça passe, c'est sûrement passager
+      anxiety -= 1
+      -> WaitItPass
+
+    Prendre un café ?
+      -> ShouldITakeACoffee
+
+    Aller voir un médecin
+      -> VisitDoctor
+
+
+beat VisitDoctor
+
+  Vous rendez visite au médecin, et vous lui dites qu'il y a quelques semaines, vous étiez enrhumé.
+
+  Enfin, vous lui expliquez que depuis quelques jours, vous avez de nouveaux symptômes que vous n'aviez jamais eus avant.
+
+  doctor: Je comprends que votre rhume est passé, alors, que se passe-t-il ? Je vous écoute.
+
+  -> DescribeYourSymptoms
+
+beat DescribeYourSymptoms
+
+  state
+    vertigo: false
+    concentration: false
+    screens: false
+    tired: false
+    brain: false
+    symptoms: 0
+    doctorPhrases: [
+      "Mmmm... entendu. D'autre symptômes ?"
+      "D'accord."
+      "Je vois..."
+    ]
+
+  choice
+    J'ai des vertiges if !vertigo
+      vertigo = true
+
+    Je n'arrive pas à me concentrer, suivre une conversation if !concentration
+      concentration = true
+
+    Les écrans me font mal, surtout lorsqu'il y a des mouvements if !screens
+      screens = true
+
+    Je suis fatigué mentalement, comme si mon cerveau n'avait plus de carburant if !tired
+      tired = true
+
+    J'ai l'impression d'avoir le cerveau pris dans un éteau if !brain
+      brain = true
+
+  doctor: $doctorPhrases[symptoms]
+  symptoms += 1
+
+  if symptoms < 3
+    -> DescribeYourSymptoms
+  else
+    -> DoctorFeedback
+
+beat DoctorFeedback
+
+  doctor: C'est fort possible que vos symptômes viennent de ce virus pandémique.
+
+  doctor: Malheureusement nous découvrons avec nos patients, un peu sur le tas, les effets qu'il peut avoir.
+
+  doctor: Votre tension est bonne, on va vous prescrire une prise de sang pour vérifier que tout est normal.
+
+  doctor: Dans tous les cas, je vous prescris des vitamines et un arrêt, reposez-vous.
+
+  -> AfterDoctor
+
+beat AfterDoctor
+
+  Vous ne savez pas trop quoi penser de cette visite chez le médecin.
+
+  Il ne semble pas en savoir beaucoup plus que vous.
+
+  choice
+    + FirstStageChoices
+
+beat TakeCoffee
+
+  TODO take coffee
+
+
+beat WaitItPass
+
+  state
+    numWaits: 0
+
+  if numWaits > 0
+    -> WaitItPassAgain
+  else
+    numWaits += 1
+
+    Vous essayez tant bien que mal de faire passer les jours qui suivent...
+
+    days += 3
+    anxiety += 1
+
+    player: Trois jours ont passé. Pas d'amélioration.
+
+    player: En fait, c'est même pire.
+
+    down(150)
+
+    choice
+      + FirstStageChoices
+
+beat WaitItPassAgain
+
+  days += 4
+  anxiety += 1
+
+  Les jours passent...
+
+  player: Une semaine. UNE SEMAINE !
+
+  mood("dizzy")
+  player: Je ne vais pas mieux.
+
+  player: Bon... après tout, une semaine, ça reste une période très courte, non ?
+
+  mood("pain")
+  player: Mais ces symptômes sont assez handicapants. Réfléchir, penser, ça fait mal...
+
+  mood("default")
+
+  choice
+    + FirstStageChoices
+
+beat IDontKnowWhatToDo
+
+  mood("pain")
+  player: Je suis perdu. Qu'est-ce qui m'arrive ?
+
+  down(1000)
+
+  mood("dizzy")
+  Ne plus pouvoir penser correctement, c'est être touché au plus profond de soi-même.
+
+  mood("default")
+  À suivre...
