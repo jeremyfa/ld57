@@ -32,6 +32,7 @@ class ChoiceButton extends Visual {
 
         text = new Text();
         text.pointSize = 30;
+        text.preRenderedSize = 30;
         text.color = Color.BLACK;
         text.content = content;
         text.depth = 2;

@@ -1,6 +1,7 @@
 package ld57;
 
 import ceramic.Color;
+import ceramic.KeyBindings;
 import ceramic.Scene;
 import ceramic.SeedRandom;
 import ceramic.Text;
@@ -49,6 +50,8 @@ class MainScene extends Scene {
     var gameCredit:Text = null;
 
     var contentWarning:Text = null;
+
+    @component var keyBindings = new KeyBindings();
 
     override function preload() {
 
@@ -176,10 +179,15 @@ class MainScene extends Scene {
     function start() {
 
         #if web
-        if (!Fullscreen.isFullscreen()) {
+        if (settings.fullscreen && !Fullscreen.isFullscreen()) {
             // Make the entire page fullscreen
             Fullscreen.openFullscreen(js.Browser.document.documentElement);
         }
+        keyBindings.bind([CMD_OR_CTRL, KEY(KEY_F)], function() {
+            if (!Fullscreen.isFullscreen()) {
+                Fullscreen.openFullscreen(js.Browser.document.documentElement);
+            }
+        });
         #end
 
         // Called when scene has finished preloading
@@ -578,7 +586,8 @@ class MainScene extends Scene {
                     touchable = false;
                     clicked = true;
 
-                    clearButtonsInterval();
+                    if (clearButtonsInterval != null)
+                        clearButtonsInterval();
 
                     for (button in choiceButtons) {
                         if (button != choiceButton) {
@@ -677,17 +686,18 @@ class MainScene extends Scene {
                     i++;
                 }
 
-                Timer.delay(this, 0.31, () -> {
-                    clearButtonsInterval = Timer.interval(this, 0.1, () -> {
-                        var newRotation = (rnd.random() - 0.5) * 30;
-                        var button = choiceButtons.randomElement();
-                        var prevRotation = button.rotation;
-                        button.rotation = Utils.lerp(prevRotation, newRotation, 0.02);
-                    });
-                });
-
                 index++;
             }
+
+            Timer.delay(this, 0.31, () -> {
+                if (clicked) return;
+                clearButtonsInterval = Timer.interval(this, 0.1, () -> {
+                    var newRotation = (rnd.random() - 0.5) * 30;
+                    var button = choiceButtons.randomElement();
+                    var prevRotation = button.rotation;
+                    button.rotation = Utils.lerp(prevRotation, newRotation, 0.02);
+                });
+            });
         });
 
     }

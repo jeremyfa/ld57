@@ -17,7 +17,7 @@ class Project extends Entity {
         settings.scaling = FIT;
         settings.resizable = true;
         settings.defaultFont = Fonts.POPPINS_REGULAR;
-        settings.fullscreen = false;
+        settings.fullscreen = true;
 
         app.onceReady(this, ready);
 
